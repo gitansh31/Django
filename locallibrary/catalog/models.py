@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import date
 
 # Create your models here.
 class Genre(models.Model):
@@ -50,6 +51,7 @@ class Book(models.Model):
         return reverse('book-detail', args=[str(self.id)])
 
 import uuid # Required for unique book instances
+from django.contrib.auth.models import User
 
 class BookInstance(models.Model):
     """Model representing a specific copy of a book (i.e. that can be borrowed from the library)."""
@@ -57,6 +59,7 @@ class BookInstance(models.Model):
     book = models.ForeignKey('Book', on_delete=models.SET_NULL, null=True)
     imprint = models.CharField(max_length=200)
     due_back = models.DateField(null=True, blank=True)
+    borrower = models.ForeignKey(User,on_delete=models.SET_NULL,null = True,blank=True)
 
     LOAN_STATUS = (
         ('m', 'Maintenance'),
@@ -72,9 +75,16 @@ class BookInstance(models.Model):
         default='m',
         help_text='Book availability',
     )
-    
+
     class Meta:
         ordering = ['due_back']
+        permissions = (("can_mark_returned", "Set book as returned"),)
+
+    @property
+    def is_overdue(self):
+        if self.due_back and date.today() > self.due_back:
+            return True
+        return False
 
     def __str__(self):
         """String for representing the Model object."""
@@ -89,7 +99,7 @@ class Author(models.Model):
     date_of_death = models.DateField('Died', null=True, blank=True)
 
     class Meta:
-        ordering = ['last_name', 'first_name']
+        ordering = ['first_name', 'last_name']
 
     def get_absolute_url(self):
         """Returns the url to access a particular author instance."""
