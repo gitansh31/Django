@@ -44,6 +44,7 @@ class BookDetailView(generic.DetailView):
 
 class AuthorListView(generic.ListView):
     model = Author
+    paginate_by = 5
 
 class AuthorDetailView(generic.DetailView):
     model = Author
@@ -76,10 +77,10 @@ from django.urls import reverse
 from catalog.forms import RenewBookForm
 from django.contrib.auth.decorators import permission_required
 
-
+@permission_required('catalog.can_mark_returned')
 def renew_book_librarian(request, pk):
     book_instance = get_object_or_404(BookInstance, pk=pk)
-    permission_required = 'catalog.can_mark_returned'
+    
     # If this is a POST request then process the Form data
     if request.method == 'POST':
 
